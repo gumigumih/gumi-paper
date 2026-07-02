@@ -38,3 +38,16 @@ table,
 | CSS | 調整中 | 見出しとテーブルを改善 |
 | 公開 | 準備中 | GitHubリポジトリとして公開 |
 | サンプル | 完了 | 表示確認用のMarkdownを追加 |
+
+## Mermaid 図
+
+HTML生成時は Mermaid CLI で図を PNG に変換し、本文に画像として埋め込みます。
+
+```mermaid
+flowchart LR
+    Markdown["theme/examples/sample.md"] --> CLI["gumi-paper-html"]
+    CSS["theme/gumi-paper.css"] --> CLI
+    CLI --> HTML["HTML"]
+    CLI --> Mermaid["Mermaid PNG"]
+    Mermaid --> HTML
+```

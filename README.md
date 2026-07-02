@@ -1,51 +1,34 @@
 # gumi-paper
 
-読みやすい紙面風のMarkdownプレビュー用CSSです。
+読みやすい紙面風のMarkdownテーマと、そのテーマを使った任意の変換ツールです。
 
-`gumi-paper.css` は Markdown Quick Look / QLMarkdown 系のプレビューで使うことを想定した軽量テーマです。通常のMarkdownレンダリング結果に加えて、GitHub風の `.markdown-body` ラッパーにも効くようにしています。
+このリポジトリでは、テーマ本体と変換ツールを分けて管理しています。
 
-## 特徴
+## 構成
 
-- 紙面らしい余白、本文幅、境界線、控えめな影
-- 装飾を強くしすぎない見出し階層
-- 濃いめの表ヘッダーと交互背景のテーブル
-- 引用、インラインコード、コードブロックの整形
-- 狭い画面でのテーブル横スクロール
+- [theme](theme): Markdownプレビュー用CSSテーマ
+- [tools/converter](tools/converter): MarkdownをHTML/PDFへ変換する任意ツール
 
-## 使い方
+`theme/gumi-paper.css` が本体です。
+変換ツールは、同じテーマを使って単体HTMLや納品用PDFを作りたい場合だけ使います。
 
-MarkdownレンダラーのカスタムCSSとして `gumi-paper.css` を指定します。
+## はじめる
 
-HTMLプレビューで使う場合は、`head` から読み込みます。
+MarkdownレンダラーのカスタムCSSとして使う場合:
 
 ```html
-<link rel="stylesheet" href="gumi-paper.css">
+<link rel="stylesheet" href="theme/gumi-paper.css">
 ```
 
-`.markdown-body` で本文を包むレンダラーでも、そのまま使えます。
+変換ツールを使う場合:
 
-## サンプル
-
-見出し、引用、コード、テーブルの雰囲気を確認するためのサンプルを用意しています。
-
-- [examples/sample.md](examples/sample.md)
-
-## カスタマイズ
-
-色は `gumi-paper.css` の先頭にあるCSS変数で調整できます。
-
-```css
-:root {
-  --page-bg: #f7f8fa;
-  --content-bg: #ffffff;
-  --text: #1d2433;
-  --link: #176b87;
-  --table-head: #dce8ee;
-  --table-row-alt: #f0f5f7;
-}
+```bash
+cd tools/converter
+npm install
+npm run html -- --markdown=theme/examples/sample.md
 ```
 
-まずはこのあたりの値を変えると、余白や組版を保ったまま雰囲気だけ調整できます。
+詳しい使い方は、それぞれの README を参照してください。
 
 ## ライセンス
 
