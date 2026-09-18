@@ -137,6 +137,33 @@ function listItems(items = []) {
   return items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
 }
 
+function tableRows(items = []) {
+  return items
+    .map(
+      (item) => `
+        <tr>
+          <th>${escapeHtml(item.label)}</th>
+          <td>${escapeHtml(item.value)}</td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
+function deliveryItemRows(items = []) {
+  return items
+    .map(
+      (item) => `
+        <tr>
+          <td>${escapeHtml(item.name)}</td>
+          <td>${escapeHtml(item.description)}</td>
+          <td>${escapeHtml(item.status ?? "納品")}</td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
 function appendix(root, args, theme, file) {
   const markdown = renderMermaid(root, args, theme, file, readMarkdown(root, theme, file));
   const note = theme.fileNotes?.[file] ?? "対象資料";
@@ -156,19 +183,57 @@ function appendix(root, args, theme, file) {
 }
 
 function buildHtml(root, args, theme, css) {
-  const fileRows = theme.files
-    .map(
-      (file) => `
-        <tr>
-          <td>${escapeHtml(file)}</td>
-          <td>${escapeHtml(updatedDate(root, theme, file))}</td>
-        </tr>
-      `,
-    )
-    .join("");
+  const overview = theme.deliveryOverview?.length
+    ? theme.deliveryOverview
+    : [
+        { label: "対象期間", value: `${theme.since ?? ""}〜${theme.until ?? ""}` },
+        { label: "収録資料", value: `${theme.files.length}件` },
+      ];
+  const deliveryItems = theme.deliveryItems?.length
+    ? theme.deliveryItems
+    : (theme.deliveredItems ?? []).map((description, index) => ({
+        name: `納品物 ${index + 1}`,
+        description,
+        status: "納品",
+      }));
+  const deliveryResults = theme.deliveryResults ?? theme.changes ?? [];
+  const deliveryNotes = theme.deliveryNotes ?? [
+    ...(theme.intentions ?? []),
+    ...(theme.usableOutcomes ?? []),
+  ];
+  const overviewRows = tableRows(overview);
+  const deliveryRows = deliveryItemRows(deliveryItems);
   const appendices = args.withAppendix
     ? theme.files.map((file) => appendix(root, args, theme, file)).join("")
     : "";
+  const coverDetail = `
+      <section class="cover-brief invoice-cover-brief">
+        <h2>納品概要</h2>
+        <table class="overview-table"><tbody>${overviewRows}</tbody></table>
+      </section>
+    `;
+  const coverFooter = `<p class="cover-note">本資料は納品書の添付資料として、対象期間の業務成果と確認事項をまとめたものです。</p>`;
+  const summarySection = `
+      <section class="paper summary invoice-summary">
+        <h1>納品資料概要</h1>
+        <p class="summary-intro">${escapeHtml(theme.summaryIntro ?? theme.summary)}</p>
+        <section class="invoice-section">
+          <h2>納品物一覧</h2>
+          <table class="delivery-items-table">
+            <thead><tr><th>納品物</th><th>内容</th><th>状態</th></tr></thead>
+            <tbody>${deliveryRows}</tbody>
+          </table>
+        </section>
+        <section class="invoice-section">
+          <h2>実施結果</h2>
+          <ul>${listItems(deliveryResults)}</ul>
+        </section>
+        <section class="invoice-section">
+          <h2>確認事項・備考</h2>
+          <ul>${listItems(deliveryNotes)}</ul>
+        </section>
+      </section>
+    `;
 
   return `<!doctype html>
 <html lang="ja">
@@ -193,27 +258,42 @@ body { max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; back
 .cover { min-height: 270mm; display: flex; flex-direction: column; justify-content: space-between; }
 .cover h1 { margin-top: 0; font-size: 22px; }
 .cover-lead { font-size: 12px; color: var(--muted); }
-.cover-brief, .summary-card {
+.cover-brief {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #fbfcfd;
 }
 .cover-brief { margin-top: 28px; padding: 14px 16px; }
-.cover-brief h2, .summary-card h2 {
+.cover-brief h2 {
   margin: 0 0 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--heading-rule);
   color: #123f50;
   font-size: 14px;
 }
-.cover-brief li, .summary-card li { font-size: 10.5px; line-height: 1.38; }
+.cover-brief li { font-size: 10.5px; line-height: 1.38; }
 .cover table { font-size: 10px; }
 .summary { min-height: 270mm; }
 .summary h1, .doc-section h1 { font-size: 20px; }
 .summary-intro, .doc-section > p { color: var(--muted); font-size: 11px; line-height: 1.45; }
-.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
-.summary-card { padding: 10px 12px; break-inside: avoid; }
-.summary-card ul { margin: 0; padding-left: 1.2em; }
+.invoice-cover-brief { max-width: 150mm; }
+.overview-table { margin: 0; font-size: 11px; }
+.overview-table th { width: 28mm; background: #edf3f5; text-align: left; }
+.cover-note { margin: 0; color: var(--ink-soft); font-size: 10px; }
+.invoice-summary { padding: 24px 26px; }
+.invoice-summary h1 { margin-bottom: 16px; }
+.invoice-section { margin-top: 18px; break-inside: avoid; }
+.invoice-section h2 {
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--heading-rule);
+  color: #123f50;
+  font-size: 15px;
+}
+.invoice-section ul { margin: 0; padding-left: 1.3em; }
+.invoice-section li { margin-bottom: 4px; font-size: 10.5px; line-height: 1.5; }
+.delivery-items-table { font-size: 10px; }
+.delivery-items-table th:last-child, .delivery-items-table td:last-child { width: 18mm; text-align: center; }
 .doc-path, .doc-updated { margin: 0 0 6px; color: var(--ink-soft); font-size: 10px; word-break: break-all; }
 .doc-section { page-break-before: always; }
 .appendix { padding: 18px 20px; }
@@ -236,28 +316,16 @@ body { max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; back
     <div>
       <h1>${escapeHtml(theme.title)}</h1>
       <p class="cover-lead">${escapeHtml(theme.summary)}</p>
-      <section class="cover-brief">
-        <h2>主な整備内容</h2>
-        <ul>${listItems(theme.deliveredItems?.slice(0, 3))}</ul>
-      </section>
+      ${coverDetail}
     </div>
     <div>
-      <table><thead><tr><th>資料</th><th>${escapeHtml(theme.dateLabel ?? "更新日")}</th></tr></thead><tbody>${fileRows}</tbody></table>
+      ${coverFooter}
     </div>
   </section>
 
-  <section class="paper summary">
-    <h1>納品サマリー</h1>
-    <p class="summary-intro">${escapeHtml(theme.summaryIntro ?? "対象資料を、変更履歴だけでなく整備内容・意図・実務で使えることまで含めて整理しています。")}</p>
-    <div class="summary-grid">
-      <section class="summary-card"><h2>整備した内容</h2><ul>${listItems(theme.deliveredItems)}</ul></section>
-      <section class="summary-card"><h2>主な変更</h2><ul>${listItems(theme.changes)}</ul></section>
-      <section class="summary-card"><h2>変更意図</h2><ul>${listItems(theme.intentions)}</ul></section>
-      <section class="summary-card"><h2>活用できること</h2><ul>${listItems(theme.usableOutcomes)}</ul></section>
-    </div>
-  </section>
+  ${summarySection}
 
-  ${args.withAppendix ? `<section class="paper doc-section"><h1>付録: 対象資料本文</h1><p>納品サマリーの根拠として、対象資料の本文を後続ページに収録しています。</p></section>${appendices}` : ""}
+  ${args.withAppendix ? `<section class="paper doc-section"><h1>付録: 対象資料本文</h1><p>納品資料概要に記載した成果物の本文を後続ページに収録しています。</p></section>${appendices}` : ""}
 </body>
 </html>`;
 }

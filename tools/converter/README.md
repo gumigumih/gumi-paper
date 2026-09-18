@@ -26,8 +26,8 @@ npm run html -- --root=/path/to/project --markdown=docs/sample.md
 
 ## PDF納品資料の生成
 
-複数のMarkdown資料を、表紙・納品サマリー・本文付録つきPDFにまとめられます。
-納品資料は単体Markdown変換とは分けて、`config.json` でタイトル、概要、整備内容、変更意図、対象Markdownファイル、資料ごとの説明を定義します。
+複数のMarkdown資料を、表紙・納品資料概要・本文付録つきPDFにまとめられます。
+納品資料は単体Markdown変換とは分けて、`config.json` でタイトル、概要、案件情報、納品物、実施結果、確認事項、対象Markdownファイル、資料ごとの説明を定義します。
 
 記入用テンプレートをコピーして、案件ごとの内容に書き換えます。
 
@@ -60,9 +60,28 @@ npm run delivery -- --root=/path/to/project --config=path/to/config.json --with-
 - `summary`: 表紙とサマリー冒頭に出す概要
 - `since` / `until`: 更新日の取得に使う対象期間
 - `sourceRef`: 特定のGit参照から本文を読む場合に指定。通常は空欄でOK
-- `deliveredItems`: 納品した成果・整備内容
-- `changes`: 対象期間の主な変更点
-- `intentions`: 変更した意図や背景
-- `usableOutcomes`: 資料によって活用できること
+- `deliveryOverview`: 案件名、対象期間、資料基準日などの表紙情報
+- `deliveryItems`: 納品物名、内容、状態
+- `deliveryResults`: 対象期間に確認できた実施結果
+- `deliveryNotes`: 未確認事項、対象外範囲、その他の備考
 - `files`: PDFにまとめるMarkdownファイル
 - `fileNotes`: 各Markdownファイルの役割・読みどころ
+
+納品概要、納品物一覧、実施結果、確認事項・備考を、納品書の添付資料として確認しやすい形式で表示します。
+
+```json
+{
+  "deliveryOverview": [
+    { "label": "案件名", "value": "案件名" },
+    { "label": "対象期間", "value": "2026年8月1日〜8月31日" },
+    { "label": "資料基準日", "value": "2026年8月31日" }
+  ],
+  "deliveryItems": [
+    { "name": "調査資料", "description": "調査内容の概要", "status": "納品" }
+  ],
+  "deliveryResults": ["対象期間に確認できた結果"],
+  "deliveryNotes": ["未確認事項や対象外範囲"]
+}
+```
+
+旧設定の`deliveredItems`、`changes`、`intentions`、`usableOutcomes`も読み込み可能ですが、新規設定では上記の納品書添付向けフィールドを使用します。
